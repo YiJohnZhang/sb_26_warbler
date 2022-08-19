@@ -1,50 +1,39 @@
-import os
-
-from flask import Flask, render_template, request, flash, redirect, session, g
+from flask import Flask;
+from flask import request, session, g, render_template, redirect, url_for, flash;
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
-
 from forms import UserAddForm, LoginForm, MessageForm
 from models import db, connect_db, User, Message
 
-CURR_USER_KEY = "curr_user"
+import os
+from functools import wraps;
+
+# Constants
+CURR_USER_KEY = "curr_user";
+ # RETURN_PAGE_KEY = "previous_page";
 
 app = Flask(__name__)
 
 # Get DB_URI from environ variable (useful for production/testing) or,
 # if not set there, use development local db.
 app.config['SQLALCHEMY_DATABASE_URI'] = (
-    os.environ.get('DATABASE_URL', 'postgresql:///warbler'))
+    os.environ.get('DATABASE_URL', 'postgresql:///sb_26_warbler'))
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_ECHO'] = False
-app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = True
+app.config['SQLALCHEMY_ECHO'] = False;
+app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False;
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', "it's a secret")
 toolbar = DebugToolbarExtension(app)
 
 connect_db(app)
 
-
-##############################################################################
-# User signup/login/logout
-
-
-@app.before_request
-def add_user_to_g():
-    """If we're logged in, add curr user to Flask global."""
-
-    if CURR_USER_KEY in session:
-        g.user = User.query.get(session[CURR_USER_KEY])
-
-    else:
-        g.user = None
-
+''' HELPER FUNCTIONS
+'''
 
 def do_login(user):
     """Log in user."""
 
     session[CURR_USER_KEY] = user.id
-
 
 def do_logout():
     """Logout user."""
@@ -52,6 +41,93 @@ def do_logout():
     if CURR_USER_KEY in session:
         del session[CURR_USER_KEY]
 
+''' Before & After Decorators
+'''
+@app.before_request
+def before_request():
+    """If we're logged in, add curr user to Flask global."""
+
+    # update current user
+    if CURR_USER_KEY in session:
+        g.user = User.query.get(session[CURR_USER_KEY])
+
+    else:
+        g.user = None
+
+    # get request path
+        # https://flask.palletsprojects.com/en/2.2.x/api/#flask.Request.environ
+    print(request.environ.get('HTTP_REFERER'))
+    print(request.url_rule);
+    # maybe use it for the error page.
+
+''' Custom Decorators
+    Define a Custom Decorator: https://medium.com/@nguyenkims/python-decorator-and-flask-3954dd186cda
+    Python Documentation: https://docs.python.org/3/library/functools.html#functools.wraps
+'''    
+
+def login_required(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+
+        if not g.user:
+            flash("Access unauthorized.", "danger")
+            return redirect("/")
+            
+        return f(*args, **kwargs);
+    
+    return wrapper;
+
+def admin_action(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+
+        return f(*args, **kwargs);
+    
+    return wrapper;
+
+@app.after_request
+def after_request(req):
+    """Add non-caching headers on every request."""
+        
+    #   Turn off all caching in Flask: (useful for dev; in production, this kind of stuff is typically handled elsewhere)
+    #       https://stackoverflow.com/questions/34066804/disabling-caching-in-flask
+
+    req.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    req.headers["Pragma"] = "no-cache"
+    req.headers["Expires"] = "0"
+    req.headers['Cache-Control'] = 'public, max-age=0'
+    return req
+
+''' VIEWS
+'''
+#   Home and Error Page
+@app.route('/')
+def homepage():
+    """Show homepage:
+
+    - anon users: no messages
+    - logged in: 100 most recent messages of followed_users
+    """
+
+    if g.user:
+        messages = (Message
+                    .query
+                    .order_by(Message.timestamp.desc())
+                    .limit(100)
+                    .all())
+
+        return render_template('home.html', messages=messages)
+
+    else:
+        return render_template('home-anon.html')
+            # refactor note: render_template on "home.html" but provide a alt. message or alt. content
+
+@app.errorhandler(404)
+def view404(e):
+    # return render_template("error.html", error = 404, returnPage = session[RETURN_PAGE_KEY]), 404
+    return render_template("error.html", error = 404), 404
+
+#   User Sign-Up/Login/Logout
 
 @app.route('/signup', methods=["GET", "POST"])
 def signup():
@@ -77,8 +153,8 @@ def signup():
             )
             db.session.commit()
 
-        except IntegrityError:
-            flash("Username already taken", 'danger')
+        except IntegrityError:  # if the username is taken, the database throws and IntegrityError
+            form.username.errors = ['Username already taken.'];
             return render_template('users/signup.html', form=form)
 
         do_login(user)
@@ -110,10 +186,13 @@ def login():
 
 
 @app.route('/logout')
+@login_required
 def logout():
     """Handle logout of user."""
+    
+    do_logout();
 
-    # IMPLEMENT THIS
+    return redirect('homepage');
 
 
 ##############################################################################
@@ -154,12 +233,9 @@ def users_show(user_id):
 
 
 @app.route('/users/<int:user_id>/following')
+@login_required
 def show_following(user_id):
     """Show list of people this user is following."""
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     user = User.query.get_or_404(user_id)
     return render_template('users/following.html', user=user)
@@ -277,46 +353,3 @@ def messages_destroy(message_id):
     db.session.commit()
 
     return redirect(f"/users/{g.user.id}")
-
-
-##############################################################################
-# Homepage and error pages
-
-
-@app.route('/')
-def homepage():
-    """Show homepage:
-
-    - anon users: no messages
-    - logged in: 100 most recent messages of followed_users
-    """
-
-    if g.user:
-        messages = (Message
-                    .query
-                    .order_by(Message.timestamp.desc())
-                    .limit(100)
-                    .all())
-
-        return render_template('home.html', messages=messages)
-
-    else:
-        return render_template('home-anon.html')
-
-
-##############################################################################
-# Turn off all caching in Flask
-#   (useful for dev; in production, this kind of stuff is typically
-#   handled elsewhere)
-#
-# https://stackoverflow.com/questions/34066804/disabling-caching-in-flask
-
-@app.after_request
-def add_header(req):
-    """Add non-caching headers on every request."""
-
-    req.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-    req.headers["Pragma"] = "no-cache"
-    req.headers["Expires"] = "0"
-    req.headers['Cache-Control'] = 'public, max-age=0'
-    return req
