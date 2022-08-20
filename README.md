@@ -6,16 +6,15 @@
 |02|Refactor `forms.py`, `app.py`, and `models.py`. Still need to figure out storing previous page for error page.|83 min|2022.08.18|17:16 - 18:39|
 |03|Done 04.02-04; 01.02-04, 07 (~33%)|108 min|2022.08.19|20:38 - 22:26|
 |04|Redefined `Likes` implementation in `models.py`^[1]^ and `templates`^[2]^. Almost finished edit user feature w/ debugging. |110 min|2022.08.20|10:10 - 12:00|
-|05|Finished edit user feature (01.05). Finished DRY error handling and custom error page (04.01).|30 min|2022.08.|12:30 - 13:00|
-|06||min|2022.08.|ab:cd - wx:yz|
+|05|Finished edit user feature (01.05). Finished DRY error handling and custom error page for `403` and `404` errors (04.01).|30 min|2022.08.|12:30 - 13:00|
+|06|implement `Likes`, dry query logic in `app.py`, fix query followers|min|2022.08.20|16:00 - wx:yz|
+|07||min|2022.08.|ab:cd - wx:yz|
+|08||min|2022.08.|ab:cd - wx:yz|
+|09||min|2022.08.|ab:cd - wx:yz|
+|10||min|2022.08.|ab:cd - wx:yz|
 ||**Total Time**|min|||
 
 435
-
-Finished edit user feature (01.05). Finished DRY error handling and custom error page (04.01).
-
-
-Finished `error.html` template and basic error codes, `404` and `403`.
 
 ||min|2022.08.|ab:cd - wx:yz|
 
@@ -80,9 +79,7 @@ Interestingly, one can [import](https://jinja.palletsprojects.com/en/3.1.x/templ
 ```
 
 # To Do
-1. Main Changes
-- define `profile()` logic (`app.py`)
-- profile edit (5)
+1. Main Assignment
 - fix homepage (6)
 2. Add Likes
 3. Add Tests
