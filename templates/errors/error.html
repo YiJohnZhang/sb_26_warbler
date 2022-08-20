@@ -3,19 +3,21 @@
 {% block content %}
 
 <div>
-    
+
     {% if errorCode == 404 %}
 
-        {% includes '404.html' %}
+        <h1>404. Not Found.</h1>
+        <p>Lmao.</p>
         
     {% elif errorCode == 403 %}
 
-        {% includes '403.html' %}
+        <h1>403. Unauthorized.</h1>
+        <p>Lol.</p>
 
     {% else %}
     {% endif %}
 
-    <p>>Return to where you came <a href="{{ previousPath }}"> from</a>.</p>
+    <p>Return to where you came <a href="{{ previousPath }}"> from</a>.</p>
 
 </div>
 

@@ -5,14 +5,17 @@
 |01|Preliminary assignment overview and codebase familiarization.|104 min|2022.08.18|13:19 - 15:03|
 |02|Refactor `forms.py`, `app.py`, and `models.py`. Still need to figure out storing previous page for error page.|83 min|2022.08.18|17:16 - 18:39|
 |03|Done 04.02-04; 01.02-04, 07 (~33%)|108 min|2022.08.19|20:38 - 22:26|
-|04|Changed `Likes` implementation in `models.py`^[1]^ and `templates`^[2]^. Almost finished edit user feature w/ debugging. |110 min|2022.08.20|10:10 - 12:00|
-|05||min|2022.08.|12:30 - wx:yz|
+|04|Redefined `Likes` implementation in `models.py`^[1]^ and `templates`^[2]^. Almost finished edit user feature w/ debugging. |110 min|2022.08.20|10:10 - 12:00|
+|05|Finished edit user feature (01.05). Finished DRY error handling and custom error page (04.01).|30 min|2022.08.|12:30 - 13:00|
 |06||min|2022.08.|ab:cd - wx:yz|
 ||**Total Time**|min|||
 
-405
+435
 
-Finished edit user feature. Finished `error.html` template and basic error codes, `404` and `403`.
+Finished edit user feature (01.05). Finished DRY error handling and custom error page (04.01).
+
+
+Finished `error.html` template and basic error codes, `404` and `403`.
 
 ||min|2022.08.|ab:cd - wx:yz|
 
@@ -27,11 +30,10 @@ Finished edit user feature. Finished `error.html` template and basic error codes
 
 # 04. Further Study
 ## Further Study Implemented (6/11)
+1. Custom 404 Page?
 2. DRY Template (Partial)
 3. DRY Authorization
 4. DRY URLs
-
-1. Custom 404 Page?
 
 5. optimize queries?
 6. private accoutns?

@@ -203,7 +203,7 @@ class User(db.Model):
         return;
 
     @classmethod
-    def listOfUserFollowing(cls, referenceUser, otherUsers):
+    def listOfUserIsFollowing(cls, referenceUser, otherUsers):
         '''Return a list of users, `otherUsers`, the account user, `referenceUser`, is following.'''
         
         

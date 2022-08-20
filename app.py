@@ -10,7 +10,7 @@ from functools import wraps;
 
 # Constants
 CURR_USER_KEY = "curr_user";
- # RETURN_PAGE_KEY = "previous_page";
+RETURN_PAGE_KEY = "previous_page";
 
 app = Flask(__name__)
 
@@ -55,10 +55,10 @@ def before_request():
         g.user = None
 
     # get request path
-        # https://flask.palletsprojects.com/en/2.2.x/api/#flask.Request.environ
-    print(request.environ.get('HTTP_REFERER'))
-    print(request.url_rule);
-    # maybe use it for the error page.
+        # https://stackoverflow.com/questions/39777171/how-to-get-the-previous-url-in-flask
+    
+    session[RETURN_PAGE_KEY] = request.referrer;
+        # need the 200 referrer, not the redirect referrrer
 
 @app.after_request
 def after_request(req):
@@ -108,6 +108,18 @@ def adminAction_decorator(f):
     
     return wrapper;
 
+''' ERROR Decorators
+'''
+@app.errorhandler(404)
+def error_404(error):
+    '''404: Not Found View'''
+    return render_template('errors/error.html', errorCode = 404, previousPath = session[RETURN_PAGE_KEY]), 404;
+
+@app.errorhandler(403)
+def error_403(error):
+    '''403: Forbidden View'''
+    return render_template('errors/error.html', errorCode = 403, previousPath = session[RETURN_PAGE_KEY]), 403;
+
 ''' VIEWS
 '''
 #   Home and Error Page
@@ -131,11 +143,6 @@ def index():
     else:
         return render_template('home.html', anonymous = True);
             # probably could check if not messages? no, in case there are no messages (new account).
-
-@app.errorhandler(404)
-def view404(e):
-    # return render_template("error.html", error = 404, returnPage = session[RETURN_PAGE_KEY]), 404
-    return render_template("error.html", error = 404), 404
 
 #   User Sign-Up/Login/Logout
 
@@ -295,8 +302,8 @@ def stop_following(follow_id):
 @loginRequired_decorator
 def profile():
     """Update profile for current user."""
-
-    # IMPLEMENT THIS
+    
+    # print(f'referrer: {session[RETURN_PAGE_KEY]}')
 
     editUserForm = UserEditForm(**g.user.returnUserInformation());
      
@@ -307,25 +314,24 @@ def profile():
             try:
                 
                 User.updateUser(g.user, request.form);
-                print('success')
-
 
             except IntegrityError:
 
                 editUserForm.username.errors = ['Username already taken.'];
-                return render_template('users/edit.html', form = editUserForm);
+                return render_template('users/edit.html', form = editUserForm, 
+                    user_id = g.user.id);
 
             return redirect(url_for('users_show', user_id = g.user.id));
 
         else:
-
-            print('asfd')
-
+            
             editUserForm.password.errors = ['Invalid Password. Try again.'];
-            return render_template('users/edit.html', form = editUserForm);
+            return render_template('users/edit.html', form = editUserForm, 
+                user_id = g.user.id);
                 # is this necessary?
 
-    return render_template('users/edit.html', form = editUserForm);
+    return render_template('users/edit.html', form = editUserForm, 
+        user_id = g.user.id);
 
 
 @app.route('/users/delete', methods=["POST"])
