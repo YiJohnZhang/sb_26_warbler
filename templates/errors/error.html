@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div>
+    
+    {% if errorCode == 404 %}
+
+        {% includes '404.html' %}
+        
+    {% elif errorCode == 403 %}
+
+        {% includes '403.html' %}
+
+    {% else %}
+    {% endif %}
+
+    <p>>Return to where you came <a href="{{ previousPath }}"> from</a>.</p>
+
+</div>
+
+{% endblock content %}

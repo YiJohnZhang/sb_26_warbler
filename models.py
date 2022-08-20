@@ -10,7 +10,7 @@ db = SQLAlchemy()
 
 
 class Follows(db.Model):
-    """Connection of a follower <-> followed_user."""
+    """Connection of a follower <-> followed_user"""
 
     __tablename__ = 'follows'
 
@@ -26,27 +26,41 @@ class Follows(db.Model):
         primary_key=True,
     )
 
+    # Compund PK is (other_user, user_id)
+    #   if user_id is following other_user
+
 
 class Likes(db.Model):
     """Mapping user likes to warbles."""
 
     __tablename__ = 'likes' 
 
-    id = db.Column(
-        db.Integer,
-        primary_key=True
-    )
-
     user_id = db.Column(
         db.Integer,
-        db.ForeignKey('users.id', ondelete='cascade')
+        db.ForeignKey('users.id', ondelete='cascade'),
+        primary_key = True
     )
 
     message_id = db.Column(
         db.Integer,
         db.ForeignKey('messages.id', ondelete='cascade'),
-        unique=True
+        primary_key = True
     )
+
+    @classmethod
+    def cleanRequestData(cls, requestData):
+
+        mutableRequestData = dict(requestData);
+
+        if mutableRequestData.get('csrf_token'):
+            mutableRequestData.pop('csrf_token');
+
+    @classmethod
+    def toggleLike(cls, userID, messageID):
+        
+        return;
+
+
 
 
 class User(db.Model):
@@ -116,7 +130,7 @@ class User(db.Model):
     )
 
     def __repr__(self):
-        return f"<User #{self.id}: {self.username}, {self.email}>"
+        return f"<User {self.id}: {self.username}, {self.email}>"
 
     def is_followed_by(self, other_user):
         """Is this user followed by `other_user`?"""
@@ -125,10 +139,75 @@ class User(db.Model):
         return len(found_user_list) == 1
 
     def is_following(self, other_user):
-        """Is this user following `other_use`?"""
+        """Is this user following `other_user`?"""
 
         found_user_list = [user for user in self.following if user == other_user]
         return len(found_user_list) == 1
+
+    def returnUserInformation(self):
+        '''Returns user information in the database except `id` and `password`.'''
+
+        returnedUserInformation = dict(vars(self));
+            # shallow copy: this caused "AttributeError: _sa_intance_state not found for 1 hour ._."
+
+       # remove overhead
+        if returnedUserInformation.get('_sa_instance_state'):
+            returnedUserInformation.pop('_sa_instance_state');
+
+        if returnedUserInformation.get('id'):
+            returnedUserInformation.pop('id');
+        
+        if returnedUserInformation.get('password'):
+            returnedUserInformation.pop('password');
+
+        return returnedUserInformation;
+
+    @classmethod
+    def cleanRequestData(cls, requestData):
+        
+        mutableRequestData = dict(requestData);
+
+        if mutableRequestData.get('csrf_token'):
+            mutableRequestData.pop('csrf_token');
+        
+        if mutableRequestData.get('id'):    # prevent user from changing their own id
+            mutableRequestData.pop('id');
+
+        if mutableRequestData.get('password'):  # do not change password
+            mutableRequestData.pop('password');
+
+        return mutableRequestData;
+
+    @classmethod
+    def updateUser(cls, userObject, requestData):
+
+        cleanedRequestData = User.cleanRequestData(requestData);
+
+        print(cleanedRequestData);
+
+        db.session.query(User).filter(User.id==userObject.id).update(cleanedRequestData)
+        db.session.commit();
+
+        return;
+
+    @classmethod
+    def listOfUserFollowers(cls, referenceUser, otherUsers):
+        '''Return a list of users, `otherUsers`, the account user, `referenceUser`, is followed by.'''
+        
+        # Compund PK is (other_user, user_id)
+        #   if user_id is following other_user, user_id being referenceUser
+
+
+        
+        
+        return;
+
+    @classmethod
+    def listOfUserFollowing(cls, referenceUser, otherUsers):
+        '''Return a list of users, `otherUsers`, the account user, `referenceUser`, is following.'''
+        
+        
+        return;
 
     @classmethod
     def signup(cls, username, email, password, image_url):
@@ -169,6 +248,8 @@ class User(db.Model):
 
         return False
 
+    
+
 
 class Message(db.Model):
     """An individual message ("warble")."""
@@ -198,6 +279,16 @@ class Message(db.Model):
     )
 
     user = db.relationship('User')
+
+    @classmethod
+    def fetchFollowedRecent100Warbles(cls, userID):
+        # messages = (Message
+        #             .query
+        #             .order_by(Message.timestamp.desc())
+        #             .limit(100)
+        #             .all())
+        # listOfFollowing = User.
+        return cls.query.filter_by(cls.user_id.in_(listOfFollowing)).order_by(cls.timestamp.desc()).limit(100).all();
 
 
 def connect_db(app):

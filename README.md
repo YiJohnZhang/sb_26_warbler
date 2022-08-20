@@ -5,7 +5,7 @@
 |01|Preliminary assignment overview and codebase familiarization.|104 min|2022.08.18|13:19 - 15:03|
 |02|Refactor `forms.py`, `app.py`, and `models.py`. Still need to figure out storing previous page for error page.|83 min|2022.08.18|17:16 - 18:39|
 |03|Done 04.02-04; 01.02-04, 07 (~33%)|108 min|2022.08.19|20:38 - 22:26|
-|04|Changed `Likes` implementation in `models.py`^[1]^ and `templates`^[2]^. Finished `error.html` template and basic error codes, `404` and `403`. |min|2022.08.20|10:10 - wx:yz|
+|04|Changed `Likes` implementation in `models.py`^[1]^ and `templates`^[2]^. Finished `error.html` template and basic error codes, `404` and `403`. |min|2022.08.20|10:10 - 12:00|
 |05||min|2022.08.|ab:cd - wx:yz|
 ||**Total Time**|min|||
 

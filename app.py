@@ -234,6 +234,8 @@ def list_users():
 def users_show(user_id):
     """Show user profile."""
 
+    # for private user, check if logged in; check if following then show; o.w. redirect to home (UI/landing)
+
     user = User.query.get_or_404(user_id)
 
     # snagging messages in order from the database;
@@ -290,15 +292,40 @@ def stop_following(follow_id):
 
 
 @app.route('/users/profile', methods=["GET", "POST"])
+@loginRequired_decorator
 def profile():
     """Update profile for current user."""
 
     # IMPLEMENT THIS
-    editUserForm = UserEditForm();
 
-    return redirect(url_for('users_show', user_id = g.user.id));
+    editUserForm = UserEditForm(**g.user.returnUserInformation());
+     
+    if editUserForm.validate_on_submit():
+        
+        if User.authenticate(g.user.username, editUserForm.password.data):
 
-    return render_template('users/edit.html');
+            try:
+                
+                User.updateUser(g.user, request.form);
+                print('success')
+
+
+            except IntegrityError:
+
+                editUserForm.username.errors = ['Username already taken.'];
+                return render_template('users/edit.html', form = editUserForm);
+
+            return redirect(url_for('users_show', user_id = g.user.id));
+
+        else:
+
+            print('asfd')
+
+            editUserForm.password.errors = ['Invalid Password. Try again.'];
+            return render_template('users/edit.html', form = editUserForm);
+                # is this necessary?
+
+    return render_template('users/edit.html', form = editUserForm);
 
 
 @app.route('/users/delete', methods=["POST"])
