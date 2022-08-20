@@ -23,3 +23,14 @@ class UserAddForm(LoginForm):
     password = PasswordField('Password', validators=[Length(min=6)])
     email = StringField('E-mail', validators=[DataRequired(), Email()])
     image_url = StringField('(Optional) Image URL')
+
+class UserEditForm(FlaskForm):
+
+    username = StringField('Username', validators=[DataRequired()]);
+        # note; pk is id, and assignment specs say to allow changing the username.
+    email = StringField('E-mail', validators=[DataRequired(), Email()]);
+    image_url = StringField('(Optional) Image URL');
+    header_image_url = StringField('(Optional) Image URL');
+    bio = StringField();
+
+    passwordConfirmation = PasswordField('Password', validators=[DataRequired()]);

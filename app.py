@@ -2,7 +2,7 @@ from flask import Flask;
 from flask import request, session, g, render_template, redirect, url_for, flash;
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
-from forms import UserAddForm, LoginForm, MessageForm
+from forms import UserAddForm, LoginForm, MessageForm, UserEditForm;
 from models import db, connect_db, User, Message
 
 import os
@@ -60,31 +60,6 @@ def before_request():
     print(request.url_rule);
     # maybe use it for the error page.
 
-''' Custom Decorators
-    Define a Custom Decorator: https://medium.com/@nguyenkims/python-decorator-and-flask-3954dd186cda
-    Python Documentation: https://docs.python.org/3/library/functools.html#functools.wraps
-'''    
-
-def login_required(f):
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-
-        if not g.user:
-            flash("Access unauthorized.", "danger")
-            return redirect("/")
-            
-        return f(*args, **kwargs);
-    
-    return wrapper;
-
-def admin_action(f):
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-
-        return f(*args, **kwargs);
-    
-    return wrapper;
-
 @app.after_request
 def after_request(req):
     """Add non-caching headers on every request."""
@@ -98,11 +73,46 @@ def after_request(req):
     req.headers['Cache-Control'] = 'public, max-age=0'
     return req
 
+''' Custom Decorators
+    Define a Custom Decorator: https://medium.com/@nguyenkims/python-decorator-and-flask-3954dd186cda
+    Python Documentation: https://docs.python.org/3/library/functools.html#functools.wraps
+'''    
+def notLoggedIn_decorator(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+
+        if g.user:
+            return redirect(url_for('index'));
+            
+        return f(*args, **kwargs);
+    
+    return wrapper;
+
+def loginRequired_decorator(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+
+        if not g.user:
+            flash("Access unauthorized.", "danger");
+            return redirect(url_for('index'));
+            
+        return f(*args, **kwargs);
+    
+    return wrapper;
+
+def adminAction_decorator(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+
+        return f(*args, **kwargs);
+    
+    return wrapper;
+
 ''' VIEWS
 '''
 #   Home and Error Page
 @app.route('/')
-def homepage():
+def index():
     """Show homepage:
 
     - anon users: no messages
@@ -119,8 +129,8 @@ def homepage():
         return render_template('home.html', messages=messages)
 
     else:
-        return render_template('home-anon.html')
-            # refactor note: render_template on "home.html" but provide a alt. message or alt. content
+        return render_template('home.html', anonymous = True);
+            # probably could check if not messages? no, in case there are no messages (new account).
 
 @app.errorhandler(404)
 def view404(e):
@@ -130,6 +140,7 @@ def view404(e):
 #   User Sign-Up/Login/Logout
 
 @app.route('/signup', methods=["GET", "POST"])
+@notLoggedIn_decorator
 def signup():
     """Handle user signup.
 
@@ -153,19 +164,22 @@ def signup():
             )
             db.session.commit()
 
-        except IntegrityError:  # if the username is taken, the database throws and IntegrityError
+        except IntegrityError:
+            # if the username is taken, the database throws and IntegrityError
             form.username.errors = ['Username already taken.'];
             return render_template('users/signup.html', form=form)
 
         do_login(user)
 
-        return redirect("/")
+        return redirect(url_for('index'));
 
     else:
-        return render_template('users/signup.html', form=form)
+        return render_template('users/onboarding.html', form=form,
+            onboardingAction = 'signup');
 
 
 @app.route('/login', methods=["GET", "POST"])
+@notLoggedIn_decorator
 def login():
     """Handle user login."""
 
@@ -178,21 +192,22 @@ def login():
         if user:
             do_login(user)
             flash(f"Hello, {user.username}!", "success")
-            return redirect("/")
+            return redirect(url_for('index'));
 
         flash("Invalid credentials.", 'danger')
 
-    return render_template('users/login.html', form=form)
+    return render_template('users/onboarding.html', form=form,
+        onboardingAction = 'login');
 
 
 @app.route('/logout')
-@login_required
+@loginRequired_decorator
 def logout():
     """Handle logout of user."""
     
     do_logout();
 
-    return redirect('homepage');
+    return redirect(url_for('index'));
 
 
 ##############################################################################
@@ -233,7 +248,7 @@ def users_show(user_id):
 
 
 @app.route('/users/<int:user_id>/following')
-@login_required
+@loginRequired_decorator
 def show_following(user_id):
     """Show list of people this user is following."""
 
@@ -242,45 +257,36 @@ def show_following(user_id):
 
 
 @app.route('/users/<int:user_id>/followers')
+@loginRequired_decorator
 def users_followers(user_id):
     """Show list of followers of this user."""
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     user = User.query.get_or_404(user_id)
     return render_template('users/followers.html', user=user)
 
 
 @app.route('/users/follow/<int:follow_id>', methods=['POST'])
+@loginRequired_decorator
 def add_follow(follow_id):
     """Add a follow for the currently-logged-in user."""
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     followed_user = User.query.get_or_404(follow_id)
     g.user.following.append(followed_user)
     db.session.commit()
 
-    return redirect(f"/users/{g.user.id}/following")
+    return redirect(url_for('show_following', user_id = g.user.id));
 
 
 @app.route('/users/stop-following/<int:follow_id>', methods=['POST'])
+@loginRequired_decorator
 def stop_following(follow_id):
     """Have currently-logged-in-user stop following this user."""
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     followed_user = User.query.get(follow_id)
     g.user.following.remove(followed_user)
     db.session.commit()
 
-    return redirect(f"/users/{g.user.id}/following")
+    return redirect(url_for('show_following', user_id = g.user.id));
 
 
 @app.route('/users/profile', methods=["GET", "POST"])
@@ -288,37 +294,36 @@ def profile():
     """Update profile for current user."""
 
     # IMPLEMENT THIS
+    editUserForm = UserEditForm();
+
+    return redirect(url_for('users_show', user_id = g.user.id));
+
+    return render_template('users/edit.html');
 
 
 @app.route('/users/delete', methods=["POST"])
+@loginRequired_decorator
 def delete_user():
     """Delete user."""
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     do_logout()
 
     db.session.delete(g.user)
     db.session.commit()
 
-    return redirect("/signup")
+    return redirect(url_for('signup'));
 
 
 ##############################################################################
 # Messages routes:
 
 @app.route('/messages/new', methods=["GET", "POST"])
+@loginRequired_decorator
 def messages_add():
     """Add a message:
 
     Show form if GET. If valid, update message and redirect to user page.
     """
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     form = MessageForm()
 
@@ -327,7 +332,7 @@ def messages_add():
         g.user.messages.append(msg)
         db.session.commit()
 
-        return redirect(f"/users/{g.user.id}")
+        return redirect(url_for('users_show', user_id = g.user.id));
 
     return render_template('messages/new.html', form=form)
 
@@ -341,15 +346,12 @@ def messages_show(message_id):
 
 
 @app.route('/messages/<int:message_id>/delete', methods=["POST"])
+@loginRequired_decorator
 def messages_destroy(message_id):
     """Delete a message."""
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
-
+    
     msg = Message.query.get(message_id)
     db.session.delete(msg)
     db.session.commit()
 
-    return redirect(f"/users/{g.user.id}")
+    return redirect(url_for('users_show', user_id = g.user.id));

@@ -1,5 +1,19 @@
 {% extends 'base.html' %}
+
 {% block content %}
+
+{% if anonymous %}
+
+  <div class="home-hero">
+    <h1>What's Happening?</h1>
+    <h4>New to Warbler?</h4>
+    <p>Sign up now to get your own personalized timeline!</p>
+    <a href="/signup" class="btn btn-primary">Sign up</a>
+  </div>
+
+
+{% else %}
+
   <div class="row">
 
     <aside class="col-md-4 col-lg-3 col-sm-12" id="home-aside">
@@ -66,4 +80,7 @@
     </div>
 
   </div>
-{% endblock %}
+
+{% endif %}
+
+{% endblock content %}
