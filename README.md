@@ -1,22 +1,25 @@
 # sb_26_warbler
- 
 ## Time Tracker
 |Session|Assignment|Time Elasped|Date|Time|
 |-|-|-|-|-|
 |01|Preliminary assignment overview and codebase familiarization.|104 min|2022.08.18|13:19 - 15:03|
 |02|Refactor `forms.py`, `app.py`, and `models.py`. Still need to figure out storing previous page for error page.|83 min|2022.08.18|17:16 - 18:39|
-|03||min|2022.08.19|20:38 - 22:26|
-|04||min|2022.08.|ab:cd - wx:yz|
+|03|Done 04.02-04; 01.02-04, 07 (~33%)|108 min|2022.08.19|20:38 - 22:26|
+|04|Changed `Likes` implementation in `models.py`^[1]^ and `templates`^[2]^. Finished `error.html` template and basic error codes, `404` and `403`. |min|2022.08.20|10:10 - wx:yz|
 |05||min|2022.08.|ab:cd - wx:yz|
 ||**Total Time**|min|||
-187
+
+295
 
 ||min|2022.08.|ab:cd - wx:yz|
+
+^[1]^ Removed `id` as `PRIMARY KEY`sql and made the PK a compound `PRIMARY KEY`sql of `user_id` and `message_id` because integers have limits; also used serial numbers do not get regenerated so theoretically the db can hit its cap of 2^31 - 1 (`SERIAL`sql) or 2^63 - 1 (`BIGSERIAL`sql) while having 0 likes in the rel.
+^[2]^ Modularized `users/show.html` to `users/messages.html` so that both `home.html`, `users/detail.html` uses the `messages.html` module to genereate message information.
 
 # 01.07. Notes
 - whether or not the user is authenticated is being kept track of by the session object `curr_user` key.
 - flask `g` object is short `global` and is the application context. It is a global variable.
-- `add_user_to_g`
+- `add_user_to_g` has been renamed to `before_request`; before every request, update the global variable to include the username.
 - `@app.before_request` is a flask defined header to execute the following function before every HTTP request.
 
 # 04. Further Study
@@ -30,7 +33,7 @@
 5. optimize queries?
 6. private accoutns?
 
-## Further STudy Skip Out
+## Further Study Skip Out
 - Add Ajax
 - Change password form
 - Add Admin users
@@ -73,7 +76,7 @@ Interestingly, one can [import](https://jinja.palletsprojects.com/en/3.1.x/templ
 
 # To Do
 1. Main Changes
-- define profile() logic (`app.py`)
+- define `profile()` logic (`app.py`)
 - profile edit (5)
 - fix homepage (6)
 2. Add Likes
