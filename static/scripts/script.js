@@ -1,0 +1,1 @@
+//messageForm = document.getElementsByClassName('messages-form');

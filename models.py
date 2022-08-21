@@ -47,6 +47,14 @@ class Likes(db.Model):
         primary_key = True
     )
 
+    likes_user = db.relationship('User', backref=db.backref('user_likes', passive_deletes = True));
+        # note SQLALchemy stores related objects in a "InstrumentedList" that is a list of all isntances that match.
+        # no-sql may not be necessary!
+    likes_messages = db.relationship('Message', backref=db.backref('message_likes', passive_deletes = True));
+
+    def __repr__(self):
+        return f'<Likes ({self.user_id}, {self.message_id})';
+
     @classmethod
     def cleanRequestData(cls, requestData):
 
@@ -57,19 +65,44 @@ class Likes(db.Model):
 
     @classmethod
     def toggleLike(cls, userID, messageID):
-        
-        selectedLike = cls.query.get_or_404((userID, messageID));
+
+        selectedLike = cls.query.get((userID, messageID));
             # how to search a composite key
+            # interesting I was debugging `.get_or_404() and because it returned `None`, it automatically yielded 404.`
+
+        print(selectedLike)
 
         if not selectedLike:
             # add to db.
-            db.session.add(cls())
+            db.session.add(cls(user_id = userID, message_id = messageID));
             db.session.commit();
-            return True;
+            return;
         
-        db.session.remove(selectedLike.id);
+        db.session.delete(selectedLike);
+            # how to query composite keys: https://stackoverflow.com/a/62333875
         db.session.commit();
-        return False;
+        return;
+    
+    @classmethod
+    def queryLikesByUserID(cls, userID):
+        return cls.query.filter(cls.user_id == userID).all();
+    
+    @classmethod
+    def queryLikesByMessageID(cls, messageID):
+        return cls.query.filter(cls.message_id == messageID).all();
+
+    # Jinja filters can take care of this.
+    # @classmethod
+    # def returnLikeCountByUserID(cls, userID):
+        
+    #     userLikes = cls.queryLikesByUserID(userID);
+    #     return len(userLikes);
+
+    # @classmethod
+    # def returnLikeCountByMessageID(cls, messageID):
+        
+    #     messageLikes = cls.queryLikesByMessageID(messageID);
+    #     return len(messageLikes);
 
 
 class User(db.Model):
@@ -171,6 +204,23 @@ class User(db.Model):
 
         return returnedUserInformation;
 
+
+    def listOfUserFollowings(self):
+        '''Return a list of users, `otherUsers`, the account user, `referenceUser`, is followed by.'''
+        
+        print('`models.py`-------------');
+        print(self.following);
+        print('-------------------');
+
+        userFollowingList = self.following;
+        userFollowingListID = [user.id for user in userFollowingList];
+
+        return userFollowingListID;
+
+    # def recentMessages(self):
+
+    #     return Message.query.filter(Message.user_id.in_(self.listOfUserFollowings())).order_by(Message.timestamp.desc()).limit(100).all();
+
     @classmethod
     def cleanRequestData(cls, requestData):
         
@@ -201,25 +251,6 @@ class User(db.Model):
         db.session.query(User).filter(User.id==userObject.id).update(cleanedRequestData)
         db.session.commit();
 
-        return;
-
-    @classmethod
-    def listOfUserFollowers(cls, referenceUser, otherUsers):
-        '''Return a list of users, `otherUsers`, the account user, `referenceUser`, is followed by.'''
-        
-        # Compund PK is (other_user, user_id)
-        #   if user_id is following other_user, user_id being referenceUser
-
-
-        
-        
-        return;
-
-    @classmethod
-    def listOfUserIsFollowing(cls, referenceUser, otherUsers):
-        '''Return a list of users, `otherUsers`, the account user, `referenceUser`, is following.'''
-        
-        
         return;
 
     @classmethod
@@ -259,10 +290,7 @@ class User(db.Model):
             if is_auth:
                 return user
 
-        return False
-
-    
-
+        return False;
 
 class Message(db.Model):
     """An individual message ("warble")."""

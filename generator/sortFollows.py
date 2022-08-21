@@ -48,7 +48,7 @@ csvOutFileColumnOne.close();
 
 with open('user_followers_followedBy_noSQL.csv', 'w') as csvOutFile:
 
-    csvOutFile.write('user_id, user_follows, user_followers\n');
+    csvOutFile.write('user_id; user_follows; user_followers\n');
 
     for i in range(1, 301):
         
@@ -80,6 +80,6 @@ with open('user_followers_followedBy_noSQL.csv', 'w') as csvOutFile:
                 # with nosql, it is O(1)*nlog(n) searching, for a population of N to search and n subpopulations
                 # with sql, it would be Nlog(N), at best and MAYBE Nlog(N)*n = n(N^2)log(N) 
 
-        # csvOutFile.write(f'{i}, {userFollowsList}, {userFollowersList}\n');
+        csvOutFile.write(f'{i}; {userFollowsList}; {userFollowersList}\n');
 
 csvOutFile.close();

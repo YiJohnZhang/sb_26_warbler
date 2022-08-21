@@ -1,9 +1,9 @@
 from flask import Flask;
-from flask import request, session, g, render_template, redirect, url_for, flash;
+from flask import request, session, g, render_template, redirect, url_for, flash, jsonify;
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 from forms import UserAddForm, LoginForm, MessageForm, UserEditForm;
-from models import db, connect_db, User, Message
+from models import db, connect_db, User, Message, Likes;
 
 import os
 from functools import wraps;
@@ -117,7 +117,7 @@ def loginOptional_decorator(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
 
-        
+
         return f(*args, **kwargs);
     
     return warpper;
@@ -157,11 +157,9 @@ def index():
     """
 
     if g.user:
-        messages = (Message
-                    .query
-                    .order_by(Message.timestamp.desc())
-                    .limit(100)
-                    .all())
+
+        messages = Message.query.filter(Message.user_id.in_(g.user.listOfUserFollowings())).order_by(Message.timestamp.desc()).limit(100).all();
+
 
         return render_template('home.html', messages=messages)
             # source of the 78 queries.
@@ -377,7 +375,6 @@ def delete_user():
 
 ##############################################################################
 # Messages routes:
-
 @app.route('/messages/new', methods=["GET", "POST"])
 @loginRequired_decorator
 def messages_add():
@@ -416,3 +413,26 @@ def messages_destroy(message_id):
     db.session.commit()
 
     return redirect(url_for('users_show', user_id = g.user.id));
+
+''' User-Likes View
+
+'''
+@app.route('/users/add_like/<int:messageID>', methods=["POST"])
+@loginRequired_decorator
+def toggleMessageLikeView(messageID):
+    
+    currentUser = g.user;
+
+    Likes.toggleLike(currentUser.id, messageID);
+
+    return redirect(url_for('index'));
+
+@app.route('/users/<int:userID>/likes', methods=['GET'])
+@loginRequired_decorator
+def usersLikedMessageView(userID):
+    
+    selectedUser = findUserByID(userID);
+
+    messages = [message.likes_messages for message in Likes.queryLikesByUserID(selectedUser.id)];
+
+    return render_template('users/show.html', user = selectedUser, messages=messages);
