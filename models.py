@@ -58,9 +58,18 @@ class Likes(db.Model):
     @classmethod
     def toggleLike(cls, userID, messageID):
         
-        return;
+        selectedLike = cls.query.get_or_404((userID, messageID));
+            # how to search a composite key
 
-
+        if not selectedLike:
+            # add to db.
+            db.session.add(cls())
+            db.session.commit();
+            return True;
+        
+        db.session.remove(selectedLike.id);
+        db.session.commit();
+        return False;
 
 
 class User(db.Model):
@@ -177,6 +186,10 @@ class User(db.Model):
             mutableRequestData.pop('password');
 
         return mutableRequestData;
+
+    @classmethod
+    def returnUserByID(cls, userID):
+        return cls.query.get_or_404(userID);
 
     @classmethod
     def updateUser(cls, userObject, requestData):

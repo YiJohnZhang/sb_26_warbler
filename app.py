@@ -41,6 +41,17 @@ def do_logout():
     if CURR_USER_KEY in session:
         del session[CURR_USER_KEY]
 
+def findUserByID(userID):
+
+    selectedUser = User.returnUserByID(userID);
+
+    if not selectedUser:
+        print('not!')
+        return -1; 
+        # gracefully search db so that the user can return to where they came from without the referrer being `None` and the non-existent ID.
+
+    return selectedUser;
+
 ''' Before & After Decorators
 '''
 @app.before_request
@@ -77,6 +88,8 @@ def after_request(req):
     Define a Custom Decorator: https://medium.com/@nguyenkims/python-decorator-and-flask-3954dd186cda
     Python Documentation: https://docs.python.org/3/library/functools.html#functools.wraps
 '''    
+# Authentication Decorators
+
 def notLoggedIn_decorator(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
@@ -100,6 +113,15 @@ def loginRequired_decorator(f):
     
     return wrapper;
 
+def loginOptional_decorator(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+
+        
+        return f(*args, **kwargs);
+    
+    return warpper;
+
 def adminAction_decorator(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
@@ -107,6 +129,9 @@ def adminAction_decorator(f):
         return f(*args, **kwargs);
     
     return wrapper;
+
+# Helper Decorators
+
 
 ''' ERROR Decorators
 '''
@@ -139,6 +164,7 @@ def index():
                     .all())
 
         return render_template('home.html', messages=messages)
+            # source of the 78 queries.
 
     else:
         return render_template('home.html', anonymous = True);
@@ -243,7 +269,8 @@ def users_show(user_id):
 
     # for private user, check if logged in; check if following then show; o.w. redirect to home (UI/landing)
 
-    user = User.query.get_or_404(user_id)
+    selectedUser = findUserByID(user_id);
+        # so apparently, a query is made for "user_id" by default and if it is a get_or_404 call ._.
 
     # snagging messages in order from the database;
     # user.messages won't be in order by default
@@ -253,7 +280,7 @@ def users_show(user_id):
                 .order_by(Message.timestamp.desc())
                 .limit(100)
                 .all())
-    return render_template('users/show.html', user=user, messages=messages)
+    return render_template('users/show.html', user = selectedUser, messages=messages)
 
 
 @app.route('/users/<int:user_id>/following')
@@ -261,8 +288,9 @@ def users_show(user_id):
 def show_following(user_id):
     """Show list of people this user is following."""
 
-    user = User.query.get_or_404(user_id)
-    return render_template('users/following.html', user=user)
+    selectedUser = findUserByID(user_id);
+
+    return render_template('users/following.html', user = selectedUser)
 
 
 @app.route('/users/<int:user_id>/followers')
@@ -270,8 +298,8 @@ def show_following(user_id):
 def users_followers(user_id):
     """Show list of followers of this user."""
 
-    user = User.query.get_or_404(user_id)
-    return render_template('users/followers.html', user=user)
+    selectedUser = findUserByID(user_id);
+    return render_template('users/followers.html', user = selectedUser)
 
 
 @app.route('/users/follow/<int:follow_id>', methods=['POST'])
@@ -279,7 +307,7 @@ def users_followers(user_id):
 def add_follow(follow_id):
     """Add a follow for the currently-logged-in user."""
 
-    followed_user = User.query.get_or_404(follow_id)
+    followed_user = User.returnUserByID(follow_id)
     g.user.following.append(followed_user)
     db.session.commit()
 
@@ -291,7 +319,7 @@ def add_follow(follow_id):
 def stop_following(follow_id):
     """Have currently-logged-in-user stop following this user."""
 
-    followed_user = User.query.get(follow_id)
+    followed_user = User.returnUserByID(follow_id)
     g.user.following.remove(followed_user)
     db.session.commit()
 

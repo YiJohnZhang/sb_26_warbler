@@ -7,7 +7,7 @@
 |03|Done 04.02-04; 01.02-04, 07 (~33%)|108 min|2022.08.19|20:38 - 22:26|
 |04|Redefined `Likes` implementation in `models.py`^[1]^ and `templates`^[2]^. Almost finished edit user feature w/ debugging. |110 min|2022.08.20|10:10 - 12:00|
 |05|Finished edit user feature (01.05). Finished DRY error handling and custom error page for `403` and `404` errors (04.01).|30 min|2022.08.|12:30 - 13:00|
-|06|implement `Likes`, dry query logic in `app.py`, fix query followers|min|2022.08.20|16:00 - wx:yz|
+|06|dry query logic in `app.py`, started implementing `Likes`, started reimplementing followers to nosql for `Users`|122 min|2022.08.20|16:00 - 18:02|
 |07||min|2022.08.|ab:cd - wx:yz|
 |08||min|2022.08.|ab:cd - wx:yz|
 |09||min|2022.08.|ab:cd - wx:yz|

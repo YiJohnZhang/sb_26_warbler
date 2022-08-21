@@ -8,6 +8,11 @@ from models import User, Message, Follows
 db.drop_all()
 db.create_all()
 
+# Use Instructions:
+#   1. Run `generator/create_csvs.py`
+#   2. Run `generator/sortFoillowsHelper.py`
+
+
 with open('generator/users.csv') as users:
     db.session.bulk_insert_mappings(User, DictReader(users))
 
