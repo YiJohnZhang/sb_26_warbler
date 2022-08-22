@@ -207,10 +207,6 @@ class User(db.Model):
 
     def listOfUserFollowings(self):
         '''Return a list of users, `otherUsers`, the account user, `referenceUser`, is followed by.'''
-        
-        print('`models.py`-------------');
-        print(self.following);
-        print('-------------------');
 
         userFollowingList = self.following;
         userFollowingListID = [user.id for user in userFollowingList];
@@ -321,15 +317,15 @@ class Message(db.Model):
 
     user = db.relationship('User')
 
-    @classmethod
-    def fetchFollowedRecent100Warbles(cls, userID):
-        # messages = (Message
-        #             .query
-        #             .order_by(Message.timestamp.desc())
-        #             .limit(100)
-        #             .all())
-        # listOfFollowing = User.
-        return cls.query.filter_by(cls.user_id.in_(listOfFollowing)).order_by(cls.timestamp.desc()).limit(100).all();
+    # @classmethod
+    # def fetchFollowedRecent100Warbles(cls, userID):
+    #     # messages = (Message
+    #     #             .query
+    #     #             .order_by(Message.timestamp.desc())
+    #     #             .limit(100)
+    #     #             .all())
+    #     # listOfFollowing = User.
+    #     return cls.query.filter_by(cls.user_id.in_(listOfFollowing)).order_by(cls.timestamp.desc()).limit(100).all();
 
 
 def connect_db(app):

@@ -9,23 +9,8 @@
 |05|Finished edit user feature (01.05). Finished DRY error handling and custom error page for `403` and `404` errors (04.01).|30 min|2022.08.|12:30 - 13:00|
 |06|dry query logic in `app.py`, started implementing `Likes`, started reimplementing followers to nosql for `Users`|122 min|2022.08.20|16:00 - 18:02|
 |07|Finished `Likes` with dry templating (02). Dropped further development of reimplementing nosql for `Users`. Finished home page (01.06) and improved querying performance (04.06).|158 min|2022.08.20|20:10 - 22:48|
-|08|Tests.|min|2022.08.21|21:10 - wx:yz|
-|09||min|2022.08.|ab:cd - wx:yz|
-|10||min|2022.08.|ab:cd - wx:yz|
-||**Total Time**|min|||
-
-715 ()
-
-||min|2022.08.|ab:cd - wx:yz|
-
-# To Do
-3. Add Tests
-    - Streamlined Tests:
-    - For all routes: attempt to visit while logged out, for all routes: attempt to visit it while logged in.
-    - 
-- overlooked search page: need to insert bio there (View = `list_users`, template = `users/index.html`)
-
-Do something clever with  `{% macro %}` and `{% import %}` statements in Jinja to rid a lot of repetition in the user detail, followers, followed_user pages, and more.
+|08|Tests.|62 min|2022.08.21|21:10 - 22:12|
+||**Total Time**|777 min|||
 
 
 ^[1]^ Removed `id` as `PRIMARY KEY`sql and made the PK a compound `PRIMARY KEY`sql of `user_id` and `message_id` because integers have limits; also used serial numbers do not get regenerated so theoretically the db can hit its cap of 2^31 - 1 (`SERIAL`sql) or 2^63 - 1 (`BIGSERIAL`sql) while having 0 likes in the rel.
@@ -110,4 +95,5 @@ Interestingly, one can [import](https://jinja.palletsprojects.com/en/3.1.x/templ
 </dl>
 <p>{{ forms.textarea('comment') }}</p>
 ```
+
 Do something clever with  `{% macro %}` and `{% import %}` statements in Jinja to rid a lot of repetition in the user detail, followers, followed_user pages, and more.

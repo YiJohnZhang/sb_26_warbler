@@ -15,22 +15,28 @@ from models import db, connect_db, Message, User
 # before we import our app, since that will have already
 # connected to the database
 
-os.environ['DATABASE_URL'] = "postgresql:///warbler-test"
+os.environ['DATABASE_URL'] = "postgresql:///sb_26_warbler_test";
 
 
 # Now we can import app
 
 from app import app, CURR_USER_KEY
+app.config['SQLALCHEMY_ECHO'] = False;
+app.config['SECRET_KEY'] = 'wtf';
+
 
 # Create our tables (we do this here, so we only create the tables
 # once for all tests --- in each test, we'll delete the data
 # and create fresh new clean test data
 
-db.create_all()
+db.drop_all();
+db.create_all();
 
 # Don't have WTForms use CSRF at all, since it's a pain to test
 
-app.config['WTF_CSRF_ENABLED'] = False
+app.config['TESTING'] = True;
+app.config['WTF_CSRF_ENABLED'] = False;
+app.config['DEBUG_TB_HOSTS'] = ['dont-show-debug-toolbar'];
 
 
 class MessageViewTestCase(TestCase):
@@ -71,3 +77,13 @@ class MessageViewTestCase(TestCase):
 
             msg = Message.query.one()
             self.assertEqual(msg.text, "Hello")
+
+            messagesQuery = Message.query.all();
+            self.assertEqual(len(messagesQuery), 1);
+
+            response = c.post("/messages/1/delete");
+            self.assertEqual(response.status_code, 200);
+            
+            messagesQuery = Message.query.all();
+            self.assertEqual(len(messagesQuery), 0);
+

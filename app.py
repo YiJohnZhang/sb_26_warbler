@@ -46,7 +46,6 @@ def findUserByID(userID):
     selectedUser = User.returnUserByID(userID);
 
     if not selectedUser:
-        print('not!')
         return -1; 
         # gracefully search db so that the user can return to where they came from without the referrer being `None` and the non-existent ID.
 
@@ -113,14 +112,14 @@ def loginRequired_decorator(f):
     
     return wrapper;
 
-def loginOptional_decorator(f):
-    @wraps(f)
-    def wrapper(*args, **kwargs):
+# def loginOptional_decorator(f):
+#     @wraps(f)
+#     def wrapper(*args, **kwargs):
 
 
-        return f(*args, **kwargs);
+#         return f(*args, **kwargs);
     
-    return warpper;
+#     return warpper;
 
 def adminAction_decorator(f):
     @wraps(f)
@@ -159,10 +158,7 @@ def index():
     if g.user:
 
         messages = Message.query.filter(Message.user_id.in_(g.user.listOfUserFollowings())).order_by(Message.timestamp.desc()).limit(100).all();
-
-
         return render_template('home.html', messages=messages)
-            # source of the 78 queries.
 
     else:
         return render_template('home.html', anonymous = True);
@@ -372,6 +368,26 @@ def delete_user():
 
     return redirect(url_for('signup'));
 
+#   User-Likes View
+@app.route('/users/<int:userID>/likes', methods=['GET'])
+@loginRequired_decorator
+def usersLikedMessageView(userID):
+    
+    selectedUser = findUserByID(userID);
+
+    messages = [message.likes_messages for message in Likes.queryLikesByUserID(selectedUser.id)];
+
+    return render_template('users/show.html', user = selectedUser, messages=messages);
+
+@app.route('/users/add_like/<int:messageID>', methods=["POST"])
+@loginRequired_decorator
+def toggleMessageLikeView(messageID):
+    
+    currentUser = g.user;
+
+    Likes.toggleLike(currentUser.id, messageID);
+
+    return redirect(url_for('index'));
 
 ##############################################################################
 # Messages routes:
@@ -413,26 +429,3 @@ def messages_destroy(message_id):
     db.session.commit()
 
     return redirect(url_for('users_show', user_id = g.user.id));
-
-''' User-Likes View
-
-'''
-@app.route('/users/add_like/<int:messageID>', methods=["POST"])
-@loginRequired_decorator
-def toggleMessageLikeView(messageID):
-    
-    currentUser = g.user;
-
-    Likes.toggleLike(currentUser.id, messageID);
-
-    return redirect(url_for('index'));
-
-@app.route('/users/<int:userID>/likes', methods=['GET'])
-@loginRequired_decorator
-def usersLikedMessageView(userID):
-    
-    selectedUser = findUserByID(userID);
-
-    messages = [message.likes_messages for message in Likes.queryLikesByUserID(selectedUser.id)];
-
-    return render_template('users/show.html', user = selectedUser, messages=messages);
