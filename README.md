@@ -51,13 +51,12 @@
 2. 06.03: DRY Template (Partial)
 3. 06.04: DRY Authorization
 4. 06.05: DRY URLs
-5. 06.06: optimize queries?
-
-6. 06.08: private accoutns?
+5. 06.06: optimize queries
 
 ## Further Study Skip Out
 - 06.02: Add Ajax
 - 06.07: Change password form
+- 06.08: private accounts
 - 06.09: Add Admin users
 - 06.10: User Blocking
 - 06.11: Direct Messages
