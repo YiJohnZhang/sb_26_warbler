@@ -46,7 +46,7 @@
 - `@app.before_request` is a flask defined header to execute the following function before every HTTP request.
 
 # 04. Further Study
-## Further Study Implemented (6/11)
+## Further Study Implemented (5/11)
 1. 06.01: Custom 404 Page
 2. 06.03: DRY Template (Partial)
 3. 06.04: DRY Authorization
